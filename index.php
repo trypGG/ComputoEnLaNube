@@ -440,11 +440,6 @@
   <!-- Olas decorativas -->
   <div class="wave"></div>
   <div class="wave"></div>
-  
-  <!-- Footer -->
-  <footer>
-    Sistema de Control de Alimentación para Pecera &copy; 2023
-  </footer>
 
   <script>
     const DEVICE_ID = "0a10aced202194944a055b7c";
