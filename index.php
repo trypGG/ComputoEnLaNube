@@ -284,6 +284,92 @@
       font-size: 0.9rem;
     }
     
+    /* Pecera */
+    .aquarium {
+      width: 300px;
+      height: 200px;
+      background-color: rgba(26, 111, 201, 0.2);
+      border: 5px solid var(--color-ocean);
+      border-radius: 15px;
+      margin: 30px auto;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .aquarium-sand {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 30px;
+      background-color: var(--color-sand);
+    }
+    
+    .aquarium-fish {
+      position: absolute;
+      font-size: 3rem;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      transition: all 0.5s ease;
+      z-index: 2;
+    }
+    
+    .aquarium-fish.happy {
+      animation: happyFish 1s ease-in-out;
+      color: #ffeb3b;
+    }
+    
+    @keyframes happyFish {
+      0%, 100% { transform: translateX(-50%) rotate(0deg); }
+      25% { transform: translateX(-50%) rotate(-15deg); }
+      75% { transform: translateX(-50%) rotate(15deg); }
+    }
+    
+    .aquarium-plant {
+      position: absolute;
+      font-size: 2rem;
+      bottom: 30px;
+      left: 20px;
+      color: var(--color-seaweed);
+      z-index: 1;
+    }
+    
+    .aquarium-plant:nth-child(2) {
+      left: auto;
+      right: 20px;
+      transform: scaleX(-1);
+    }
+    
+    .food-particle {
+      position: absolute;
+      font-size: 1rem;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: foodFall 2s linear forwards;
+      z-index: 3;
+      opacity: 0;
+    }
+    
+    @keyframes foodFall {
+      0% { transform: translate(-50%, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(-50%, 150px) rotate(360deg); opacity: 0; }
+    }
+    
+    .bubble-aquarium {
+      position: absolute;
+      background-color: rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+      animation: bubbleRise 4s linear infinite;
+      z-index: 1;
+    }
+    
+    @keyframes bubbleRise {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-200px); opacity: 0; }
+    }
+    
     /* Responsive */
     @media (max-width: 600px) {
       .container {
@@ -296,6 +382,11 @@
       
       button {
         padding: 10px 20px;
+      }
+      
+      .aquarium {
+        width: 250px;
+        height: 180px;
       }
     }
   </style>
@@ -336,6 +427,14 @@
       </button>
     </form>
     <div id="respuesta"></div>
+  </div>
+  
+  <!-- Pecera interactiva -->
+  <div class="aquarium">
+    <div class="aquarium-sand"></div>
+    <i class="fas fa-fish aquarium-fish" id="main-fish"></i>
+    <i class="fas fa-seedling aquarium-plant"></i>
+    <i class="fas fa-seedling aquarium-plant"></i>
   </div>
   
   <!-- Olas decorativas -->
@@ -418,6 +517,74 @@
       }, 3000);
     }
     
+    // Animación de alimentación en la pecera
+    function animateFeeding() {
+      const fish = document.getElementById('main-fish');
+      const aquarium = document.querySelector('.aquarium');
+      
+      // Hacer el pez feliz
+      fish.classList.add('happy');
+      setTimeout(() => {
+        fish.classList.remove('happy');
+      }, 1000);
+      
+      // Crear burbujas en la pecera
+      for (let i = 0; i < 10; i++) {
+        createAquariumBubble();
+      }
+      
+      // Crear partículas de comida
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+          createFoodParticle();
+        }, i * 300);
+      }
+    }
+    
+    function createAquariumBubble() {
+      const bubble = document.createElement('div');
+      bubble.classList.add('bubble-aquarium');
+      
+      // Tamaño aleatorio
+      const size = Math.random() * 10 + 5;
+      bubble.style.width = `${size}px`;
+      bubble.style.height = `${size}px`;
+      
+      // Posición aleatoria en la pecera
+      bubble.style.left = `${Math.random() * 250 + 25}px`;
+      bubble.style.bottom = '30px';
+      
+      // Duración de animación aleatoria
+      const duration = Math.random() * 3 + 2;
+      bubble.style.animationDuration = `${duration}s`;
+      
+      // Retraso aleatorio
+      bubble.style.animationDelay = `${Math.random() * 1}s`;
+      
+      document.querySelector('.aquarium').appendChild(bubble);
+      
+      // Eliminar después de la animación
+      setTimeout(() => {
+        bubble.remove();
+      }, duration * 1000);
+    }
+    
+    function createFoodParticle() {
+      const food = document.createElement('div');
+      food.classList.add('food-particle');
+      food.innerHTML = '<i class="fas fa-circle" style="color: var(--color-coral);"></i>';
+      
+      // Posición aleatoria en la parte superior de la pecera
+      food.style.left = `${Math.random() * 250 + 25}px`;
+      
+      document.querySelector('.aquarium').appendChild(food);
+      
+      // Eliminar después de la animación
+      setTimeout(() => {
+        food.remove();
+      }, 2000);
+    }
+    
     function alimentarManual() {
       fetch(`https://api.particle.io/v1/devices/${DEVICE_ID}/alimentar`, {
         method: "POST",
@@ -428,32 +595,7 @@
       }).then(res => res.json())
         .then(data => {
           showResponse("¡Alimento proporcionado! 🐠");
-          
-          // Animación de comida cayendo
-          const foodDrop = document.createElement('div');
-          foodDrop.innerHTML = '<i class="fas fa-utensils" style="font-size: 2rem; color: var(--color-coral);"></i>';
-          foodDrop.style.position = 'fixed';
-          foodDrop.style.top = '100px';
-          foodDrop.style.left = '50%';
-          foodDrop.style.transform = 'translateX(-50%)';
-          foodDrop.style.animation = 'drop 2s linear forwards';
-          document.body.appendChild(foodDrop);
-          
-          // Crear estilo para la animación
-          const style = document.createElement('style');
-          style.innerHTML = `
-            @keyframes drop {
-              0% { transform: translate(-50%, 0) rotate(0deg); opacity: 1; }
-              100% { transform: translate(-50%, 300px) rotate(360deg); opacity: 0; }
-            }
-          `;
-          document.head.appendChild(style);
-          
-          // Eliminar después de la animación
-          setTimeout(() => {
-            foodDrop.remove();
-            style.remove();
-          }, 2000);
+          animateFeeding();
         }).catch(error => {
           console.error("Error:", error);
           showResponse("Error al alimentar. Intente nuevamente.");
@@ -482,6 +624,7 @@
       }).then(res => res.json())
         .then(data => {
           showResponse("✅ Horario programado con éxito.");
+          animateFeeding(); // También animamos la pecera al programar
         }).catch(error => {
           console.error("Error:", error);
           showResponse("Error al programar. Intente nuevamente.");
@@ -492,6 +635,19 @@
     window.onload = function() {
       createBubbles();
       createFish();
+      
+      // Crear burbujas en la pecera automáticamente
+      setInterval(() => {
+        if (Math.random() > 0.7) {
+          createAquariumBubble();
+        }
+      }, 1000);
+      
+      // Mover el pez de vez en cuando
+      const fish = document.getElementById('main-fish');
+      setInterval(() => {
+        fish.style.transform = `translateX(${Math.random() * 40 - 20}px)`;
+      }, 3000);
     };
   </script>
 </body>
