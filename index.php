@@ -1,649 +1,847 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AquaFeed - Control de Alimento para Pecera</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    :root {
-      --color-ocean: #1a6fc9;
-      --color-light-ocean: #4d9de0;
-      --color-sand: #f5d393;
-      --color-coral: #ff7f50;
-      --color-dark-coral: #e67347;
-      --color-seaweed: #2e8b57;
-    }
-    
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-      background-color: #e0f7fa;
-      background-image: linear-gradient(to bottom, #e0f7fa, #b3e5fc);
-      min-height: 100vh;
-      position: relative;
-      overflow-x: hidden;
-    }
-    
-    /* Animación de burbujas */
-    .bubble {
-      position: absolute;
-      bottom: 0;
-      background-color: rgba(255, 255, 255, 0.6);
-      border-radius: 50%;
-      animation: float linear infinite;
-      z-index: -1;
-    }
-    
-    @keyframes float {
-      0% {
-        transform: translateY(0) rotate(0deg);
-        opacity: 1;
-      }
-      100% {
-        transform: translateY(-100vh) rotate(360deg);
-        opacity: 0;
-      }
-    }
-    
-    /* Peces animados */
-    .fish {
-      position: absolute;
-      font-size: 2rem;
-      animation: swim linear infinite;
-      z-index: -1;
-      opacity: 0.7;
-    }
-    
-    @keyframes swim {
-      0% {
-        transform: translateX(-100px);
-      }
-      100% {
-        transform: translateX(calc(100vw + 100px));
-      }
-    }
-    
-    /* Cabecera */
-    header {
-      background-color: var(--color-ocean);
-      color: white;
-      padding: 1rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-    
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    .logo i {
-      font-size: 2rem;
-      color: var(--color-sand);
-    }
-    
-    .logo h1 {
-      margin: 0;
-      font-size: 1.8rem;
-      font-weight: 600;
-    }
-    
-    /* Contenedor principal */
-    .container {
-      display: inline-block;
-      border: 3px solid var(--color-ocean);
-      padding: 30px;
-      border-radius: 15px;
-      background: rgba(255, 255, 255, 0.9);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-      margin: 30px auto;
-      max-width: 500px;
-      width: 90%;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .container:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
-    }
-    
-    .container::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 8px;
-      background: linear-gradient(90deg, var(--color-ocean), var(--color-light-ocean), var(--color-ocean));
-    }
-    
-    h2 {
-      color: var(--color-ocean);
-      margin-bottom: 25px;
-      font-size: 1.8rem;
-      position: relative;
-      display: inline-block;
-    }
-    
-    h2::after {
-      content: "";
-      position: absolute;
-      bottom: -8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60px;
-      height: 3px;
-      background-color: var(--color-coral);
-    }
-    
-    h3 {
-      color: var(--color-seaweed);
-      margin-top: 25px;
-      margin-bottom: 15px;
-    }
-    
-    /* Botones */
-    button {
-      padding: 12px 25px;
-      margin: 10px;
-      font-size: 16px;
-      border: none;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    }
-    
-    button:active {
-      transform: translateY(0);
-    }
-    
-    button:first-of-type {
-      background-color: var(--color-coral);
-      color: white;
-    }
-    
-    button:first-of-type:hover {
-      background-color: var(--color-dark-coral);
-    }
-    
-    button[type="submit"] {
-      background-color: var(--color-seaweed);
-      color: white;
-    }
-    
-    button[type="submit"]:hover {
-      background-color: #267a4d;
-    }
-    
-    /* Formulario */
-    form {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    
-    label {
-      margin: 8px 0;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      width: 100%;
-      max-width: 250px;
-      color: var(--color-ocean);
-      font-weight: 500;
-    }
-    
-    input {
-      padding: 10px 15px;
-      margin: 5px 0;
-      font-size: 16px;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      width: 100%;
-      transition: border-color 0.3s;
-    }
-    
-    input:focus {
-      outline: none;
-      border-color: var(--color-light-ocean);
-    }
-    
-    /* Respuesta */
-    #respuesta {
-      margin-top: 20px;
-      padding: 12px;
-      border-radius: 8px;
-      font-weight: 500;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      background-color: #e8f5e9;
-      color: #2e7d32;
-    }
-    
-    #respuesta.show {
-      opacity: 1;
-    }
-    
-    /* Olas decorativas */
-    .wave {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 100px;
-      background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg"><path fill="%231a6fc9" fill-opacity="0.2" d="M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
-      background-repeat: repeat-x;
-      background-size: 1440px 100px;
-      z-index: -1;
-      animation: wave 15s linear infinite;
-    }
-    
-    .wave:nth-child(2) {
-      animation-duration: 20s;
-      opacity: 0.5;
-      background-position-y: 20px;
-    }
-    
-    @keyframes wave {
-      0% {
-        background-position-x: 0;
-      }
-      100% {
-        background-position-x: 1440px;
-      }
-    }
-    
-    /* Footer */
-    footer {
-      background-color: var(--color-ocean);
-      color: white;
-      padding: 1rem;
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      font-size: 0.9rem;
-    }
-    
-    /* Pecera */
-    .aquarium {
-      width: 300px;
-      height: 200px;
-      background-color: rgba(26, 111, 201, 0.2);
-      border: 5px solid var(--color-ocean);
-      border-radius: 15px;
-      margin: 30px auto;
-      position: relative;
-      overflow: hidden;
-      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
-    }
-    
-    .aquarium-sand {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      height: 30px;
-      background-color: var(--color-sand);
-    }
-    
-    .aquarium-fish {
-      position: absolute;
-      font-size: 3rem;
-      bottom: 40px;
-      left: 50%;
-      transform: translateX(-50%);
-      transition: all 0.5s ease;
-      z-index: 2;
-    }
-    
-    .aquarium-fish.happy {
-      animation: happyFish 1s ease-in-out;
-      color: #ffeb3b;
-    }
-    
-    @keyframes happyFish {
-      0%, 100% { transform: translateX(-50%) rotate(0deg); }
-      25% { transform: translateX(-50%) rotate(-15deg); }
-      75% { transform: translateX(-50%) rotate(15deg); }
-    }
-    
-    .aquarium-plant {
-      position: absolute;
-      font-size: 2rem;
-      bottom: 30px;
-      left: 20px;
-      color: var(--color-seaweed);
-      z-index: 1;
-    }
-    
-    .aquarium-plant:nth-child(2) {
-      left: auto;
-      right: 20px;
-      transform: scaleX(-1);
-    }
-    
-    .food-particle {
-      position: absolute;
-      font-size: 1rem;
-      top: -20px;
-      left: 50%;
-      transform: translateX(-50%);
-      animation: foodFall 2s linear forwards;
-      z-index: 3;
-      opacity: 0;
-    }
-    
-    @keyframes foodFall {
-      0% { transform: translate(-50%, 0) rotate(0deg); opacity: 1; }
-      100% { transform: translate(-50%, 150px) rotate(360deg); opacity: 0; }
-    }
-    
-    .bubble-aquarium {
-      position: absolute;
-      background-color: rgba(255, 255, 255, 0.6);
-      border-radius: 50%;
-      animation: bubbleRise 4s linear infinite;
-      z-index: 1;
-    }
-    
-    @keyframes bubbleRise {
-      0% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(-200px); opacity: 0; }
-    }
-    
-    /* Responsive */
-    @media (max-width: 600px) {
-      .container {
-        padding: 20px;
-      }
-      
-      h2 {
-        font-size: 1.5rem;
-      }
-      
-      button {
-        padding: 10px 20px;
-      }
-      
-      .aquarium {
-        width: 250px;
-        height: 180px;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Fire Guardian</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .status-bar {
+            height: 24px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .app-header {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .app-title {
+            color: white;
+            font-size: 1.4rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .connection-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .connected {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+
+        .disconnected {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border: 1px solid #f44336;
+        }
+
+        .main-content {
+            padding: 20px;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .room-status {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .room-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .safe-mode {
+            color: #4CAF50;
+        }
+
+        .danger-mode {
+            color: #f44336;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+
+        .room-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .room-subtitle {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .sensor-data {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .sensor-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .sensor-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2196F3;
+        }
+
+        .sensor-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .control-section {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .control-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .pump-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .pump-icon {
+            font-size: 2.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .pump-off {
+            color: #9E9E9E;
+        }
+
+        .pump-on {
+            color: #2196F3;
+            animation: rotate 2s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .info-message {
+            background: rgba(33, 150, 243, 0.1);
+            border: 1px solid #2196F3;
+            color: #1976D2;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .notifications {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .notifications-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .notification-icon {
+            font-size: 1.5rem;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-text {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .notification-time {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .alert-notification {
+            background: rgba(244, 67, 54, 0.1);
+            border-left: 4px solid #f44336;
+        }
+
+        .info-notification {
+            background: rgba(33, 150, 243, 0.1);
+            border-left: 4px solid #2196F3;
+        }
+
+        .success-notification {
+            background: rgba(76, 175, 80, 0.1);
+            border-left: 4px solid #4CAF50;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .fab:active {
+            transform: scale(0.9);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .modal-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .emergency-alert {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(244, 67, 54, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            color: white;
+            text-align: center;
+        }
+
+        .alert-content {
+            padding: 40px;
+        }
+
+        .alert-icon {
+            font-size: 6rem;
+            margin-bottom: 20px;
+            animation: pulse 1s infinite;
+        }
+
+        .alert-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .alert-message {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .threshold-indicator {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
-  <!-- Cabecera con logo -->
-  <header>
-    <div class="logo">
-      <i class="fas fa-fish"></i>
-      <h1>AquaFeed Control</h1>
+    <div class="status-bar"></div>
+    
+    <div class="app-header">
+        <div class="app-title">
+            🔥 Fire Guardian
+        </div>
+        <div class="connection-status disconnected" id="connectionStatus">
+            🔴 Desconectado
+        </div>
     </div>
-  </header>
-  
-  <!-- Contenedor principal -->
-  <div class="container">
-    <h2>Control de Alimento para Pecera</h2>
-    
-    <button onclick="alimentarManual()">
-      <i class="fas fa-utensils"></i> Dar Alimento Ahora
-    </button>
-    
-    <h3>Programar Horario</h3>
-    <form onsubmit="programar(event)">
-      <label>
-        Hora (24h):
-        <input type="number" id="hora" min="0" max="23" required>
-      </label>
-      <label>
-        Minuto:
-        <input type="number" id="minuto" min="0" max="59" required>
-      </label>
-      <label>
-        Día (1-31 o -1 para cualquier día):
-        <input type="number" id="dia" min="-1" max="31" required>
-      </label>
-      <button type="submit">
-        <i class="far fa-clock"></i> Programar
-      </button>
-    </form>
-    <div id="respuesta"></div>
-  </div>
-  
-  <!-- Pecera interactiva -->
-  <div class="aquarium">
-    <div class="aquarium-sand"></div>
-    <i class="fas fa-fish aquarium-fish" id="main-fish"></i>
-    <i class="fas fa-seedling aquarium-plant"></i>
-    <i class="fas fa-seedling aquarium-plant"></i>
-  </div>
-  
-  <!-- Olas decorativas -->
-  <div class="wave"></div>
-  <div class="wave"></div>
 
-  <script>
-    const DEVICE_ID = "0a10aced202194944a055b7c";
-    const ACCESS_TOKEN = "81290ef92c95e6da2b79850a4d38ffbacaf216e4";
-    
-    // Crear burbujas
-    function createBubbles() {
-      const bubbleCount = 20;
-      for (let i = 0; i < bubbleCount; i++) {
-        const bubble = document.createElement('div');
-        bubble.classList.add('bubble');
-        
-        // Tamaño aleatorio
-        const size = Math.random() * 30 + 10;
-        bubble.style.width = `${size}px`;
-        bubble.style.height = `${size}px`;
-        
-        // Posición aleatoria
-        bubble.style.left = `${Math.random() * 100}%`;
-        
-        // Duración de animación aleatoria
-        const duration = Math.random() * 15 + 10;
-        bubble.style.animationDuration = `${duration}s`;
-        
-        // Retraso aleatorio
-        bubble.style.animationDelay = `${Math.random() * 5}s`;
-        
-        document.body.appendChild(bubble);
-      }
-    }
-    
-    // Crear peces
-    function createFish() {
-      const fishCount = 5;
-      const fishIcons = ['fas fa-fish', 'fas fa-fish', 'fas fa-fish', 'fas fa-kiwi-bird', 'fas fa-shrimp'];
-      const fishColors = ['#FF5722', '#3F51B5', '#009688', '#E91E63', '#795548'];
-      
-      for (let i = 0; i < fishCount; i++) {
-        const fish = document.createElement('i');
-        fish.className = fishIcons[Math.floor(Math.random() * fishIcons.length)] + ' fish';
-        fish.style.color = fishColors[Math.floor(Math.random() * fishColors.length)];
-        
-        // Posición vertical aleatoria
-        fish.style.top = `${Math.random() * 80 + 10}%`;
-        
-        // Duración de animación aleatoria
-        const duration = Math.random() * 30 + 20;
-        fish.style.animationDuration = `${duration}s`;
-        
-        // Retraso aleatorio
-        fish.style.animationDelay = `${Math.random() * 10}s`;
-        
-        // Dirección (algunos peces mirando al revés)
-        if (Math.random() > 0.5) {
-          fish.style.transform = 'scaleX(-1)';
-        }
-        
-        document.body.appendChild(fish);
-      }
-    }
-    
-    // Mostrar respuesta
-    function showResponse(message) {
-      const respuesta = document.getElementById('respuesta');
-      respuesta.innerText = message;
-      respuesta.classList.add('show');
-      
-      setTimeout(() => {
-        respuesta.classList.remove('show');
-      }, 3000);
-    }
-    
-    // Animación de alimentación en la pecera
-    function animateFeeding() {
-      const fish = document.getElementById('main-fish');
-      const aquarium = document.querySelector('.aquarium');
-      
-      // Hacer el pez feliz
-      fish.classList.add('happy');
-      setTimeout(() => {
-        fish.classList.remove('happy');
-      }, 1000);
-      
-      // Crear burbujas en la pecera
-      for (let i = 0; i < 10; i++) {
-        createAquariumBubble();
-      }
-      
-      // Crear partículas de comida
-      for (let i = 0; i < 5; i++) {
-        setTimeout(() => {
-          createFoodParticle();
-        }, i * 300);
-      }
-    }
-    
-    function createAquariumBubble() {
-      const bubble = document.createElement('div');
-      bubble.classList.add('bubble-aquarium');
-      
-      // Tamaño aleatorio
-      const size = Math.random() * 10 + 5;
-      bubble.style.width = `${size}px`;
-      bubble.style.height = `${size}px`;
-      
-      // Posición aleatoria en la pecera
-      bubble.style.left = `${Math.random() * 250 + 25}px`;
-      bubble.style.bottom = '30px';
-      
-      // Duración de animación aleatoria
-      const duration = Math.random() * 3 + 2;
-      bubble.style.animationDuration = `${duration}s`;
-      
-      // Retraso aleatorio
-      bubble.style.animationDelay = `${Math.random() * 1}s`;
-      
-      document.querySelector('.aquarium').appendChild(bubble);
-      
-      // Eliminar después de la animación
-      setTimeout(() => {
-        bubble.remove();
-      }, duration * 1000);
-    }
-    
-    function createFoodParticle() {
-      const food = document.createElement('div');
-      food.classList.add('food-particle');
-      food.innerHTML = '<i class="fas fa-circle" style="color: var(--color-coral);"></i>';
-      
-      // Posición aleatoria en la parte superior de la pecera
-      food.style.left = `${Math.random() * 250 + 25}px`;
-      
-      document.querySelector('.aquarium').appendChild(food);
-      
-      // Eliminar después de la animación
-      setTimeout(() => {
-        food.remove();
-      }, 2000);
-    }
-    
-    function alimentarManual() {
-      fetch(`https://api.particle.io/v1/devices/${DEVICE_ID}/alimentar`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: `access_token=${ACCESS_TOKEN}`
-      }).then(res => res.json())
-        .then(data => {
-          showResponse("¡Alimento proporcionado! 🐠");
-          animateFeeding();
-        }).catch(error => {
-          console.error("Error:", error);
-          showResponse("Error al alimentar. Intente nuevamente.");
+    <div class="main-content">
+        <div class="room-status">
+            <div class="room-icon safe-mode" id="roomIcon">🏠</div>
+            <div class="room-title" id="roomTitle">Estado Normal</div>
+            <div class="room-subtitle" id="roomSubtitle">Esperando conexión con el dispositivo</div>
+            
+            <div class="sensor-data">
+                <div class="sensor-item">
+                    <div class="sensor-value" id="temperatureValue">--°C</div>
+                    <div class="sensor-label">Temperatura</div>
+                    <div class="threshold-indicator">
+                        Umbral de alerta: 40°C
+                    </div>
+                </div>
+                <div class="sensor-item">
+                    <div class="sensor-value" id="systemStatus">Esperando</div>
+                    <div class="sensor-label">Estado del Sistema</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <div class="control-title">Estado del Sistema de Extinción</div>
+            
+            <div class="pump-status">
+                <div class="pump-icon pump-off" id="pumpIcon">💧</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 1.1rem;" id="pumpStatus">Sistema Inactivo</div>
+                    <div style="color: #666; font-size: 0.9rem;" id="pumpSubstatus">Esperando datos del sensor</div>
+                </div>
+            </div>
+
+            <div class="info-message">
+                📡 Este sistema se activa automáticamente cuando la temperatura supera los 40°C.
+                El dispositivo controla la bomba, LEDs y buzzer de forma independiente.
+            </div>
+        </div>
+
+        <div class="notifications">
+            <div class="notifications-title">
+                🔔 Registro de Eventos
+            </div>
+            <div id="notificationsList">
+                <div class="notification-item info-notification">
+                    <div class="notification-icon">ℹ️</div>
+                    <div class="notification-content">
+                        <div class="notification-text">Sistema web iniciado</div>
+                        <div class="notification-time">Ahora</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="fab" onclick="openSettings()">⚙️</button>
+
+    <!-- Modal de Configuración -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-title">Configuración de Dispositivo</div>
+            <p style="margin-bottom: 20px; color: #666; text-align: center;">
+                Configura la conexión con tu Particle Photon
+            </p>
+            
+            <div class="form-group">
+                <label class="form-label">Device ID</label>
+                <input type="text" class="form-input" id="deviceId" placeholder="Tu Particle Device ID">
+                <small style="color: #666; font-size: 0.8rem;">Encuentra tu Device ID en la consola de Particle</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Access Token</label>
+                <input type="password" class="form-input" id="accessToken" placeholder="Tu Access Token">
+                <small style="color: #666; font-size: 0.8rem;">Genera un token desde tu cuenta de Particle</small>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="saveSettings()">Conectar</button>
+                <button class="btn btn-secondary" onclick="closeSettings()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerta de Emergencia -->
+    <div class="emergency-alert" id="emergencyAlert">
+        <div class="alert-content">
+            <div class="alert-icon">🚨</div>
+            <div class="alert-title">¡TEMPERATURA CRÍTICA!</div>
+            <div class="alert-message" id="alertMessage">Sistema de extinción activado automáticamente</div>
+            <button class="btn btn-primary" onclick="acknowledgeAlert()" style="font-size: 1.2rem; padding: 15px 30px;">
+                Confirmar Recibido
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let deviceId = '';
+        let accessToken = '';
+        let isConnected = false;
+        let pollInterval;
+        let lastTemperature = 0;
+        let alertShown = false;
+
+        // Configuración inicial
+        window.addEventListener('load', function() {
+            loadSettings();
+            if (deviceId && accessToken) {
+                startMonitoring();
+            }
+            
+            // Solicitar permisos de notificación
+            if ('Notification' in window) {
+                Notification.requestPermission();
+            }
         });
-    }
-    
-    function programar(e) {
-      e.preventDefault();
-      const hora = document.getElementById("hora").value;
-      const minuto = document.getElementById("minuto").value;
-      const dia = document.getElementById("dia").value;
-      const datos = `${hora},${minuto},${dia}`;
-      
-      // Validación adicional
-      if (hora < 0 || hora > 23 || minuto < 0 || minuto > 59 || dia < -1 || dia > 31 || (dia == 0 && dia != -1)) {
-        showResponse("Por favor ingrese valores válidos.");
-        return;
-      }
-      
-      fetch(`https://api.particle.io/v1/devices/${DEVICE_ID}/programar`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: `access_token=${ACCESS_TOKEN}&args=${datos}`
-      }).then(res => res.json())
-        .then(data => {
-          showResponse("✅ Horario programado con éxito.");
-          animateFeeding(); // También animamos la pecera al programar
-        }).catch(error => {
-          console.error("Error:", error);
-          showResponse("Error al programar. Intente nuevamente.");
-        });
-    }
-    
-    // Inicializar elementos decorativos
-    window.onload = function() {
-      createBubbles();
-      createFish();
-      
-      // Crear burbujas en la pecera automáticamente
-      setInterval(() => {
-        if (Math.random() > 0.7) {
-          createAquariumBubble();
+
+        // Gestión de configuración
+        function openSettings() {
+            document.getElementById('deviceId').value = deviceId;
+            document.getElementById('accessToken').value = accessToken;
+            document.getElementById('settingsModal').style.display = 'flex';
         }
-      }, 1000);
-      
-      // Mover el pez de vez en cuando
-      const fish = document.getElementById('main-fish');
-      setInterval(() => {
-        fish.style.transform = `translateX(${Math.random() * 40 - 20}px)`;
-      }, 3000);
-    };
-  </script>
+
+        function closeSettings() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        function saveSettings() {
+            const newDeviceId = document.getElementById('deviceId').value.trim();
+            const newAccessToken = document.getElementById('accessToken').value.trim();
+            
+            if (!newDeviceId || !newAccessToken) {
+                alert('Por favor, ingresa tanto el Device ID como el Access Token');
+                return;
+            }
+
+            deviceId = newDeviceId;
+            accessToken = newAccessToken;
+            
+            // Guardar en memoria
+            window.deviceSettings = { deviceId, accessToken };
+            
+            closeSettings();
+            addNotification('Configuración guardada, intentando conectar...', 'info');
+            
+            // Detener monitoreo anterior si existe
+            if (pollInterval) {
+                clearInterval(pollInterval);
+            }
+            
+            startMonitoring();
+        }
+
+        function loadSettings() {
+            if (window.deviceSettings) {
+                deviceId = window.deviceSettings.deviceId;
+                accessToken = window.deviceSettings.accessToken;
+            }
+        }
+
+        // Monitoreo del dispositivo
+        function startMonitoring() {
+            if (!deviceId || !accessToken) {
+                updateConnectionStatus(false);
+                addNotification('Configuración incompleta. Usa el botón ⚙️ para configurar', 'info');
+                return;
+            }
+
+            addNotification('Iniciando conexión con el dispositivo...', 'info');
+            
+            // Verificar conexión inicial
+            testConnection();
+            
+            // Iniciar polling cada 2 segundos
+            pollInterval = setInterval(async () => {
+                await checkSensorData();
+            }, 2000);
+        }
+
+        async function testConnection() {
+            try {
+                const response = await fetch(`https://api.particle.io/v1/devices/${deviceId}/ping`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                });
+
+                if (response.ok) {
+                    updateConnectionStatus(true);
+                    addNotification('Dispositivo conectado correctamente', 'success');
+                } else {
+                    throw new Error('No se pudo conectar con el dispositivo');
+                }
+            } catch (error) {
+                console.error('Connection test failed:', error);
+                updateConnectionStatus(false);
+                addNotification('Error de conexión. Verifica tus credenciales', 'alert');
+            }
+        }
+
+        async function checkSensorData() {
+            if (!isConnected) return;
+
+            try {
+                // Obtener temperatura desde el Particle Photon
+                // Nota: Tu código del Photon debería publicar la temperatura como variable o evento
+                const response = await fetch(`https://api.particle.io/v1/devices/${deviceId}/temperatura?access_token=${accessToken}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const temperature = parseFloat(data.result);
+                    
+                    // Actualizar UI con temperatura real
+                    document.getElementById('temperatureValue').textContent = `${temperature.toFixed(1)}°C`;
+                    
+                    // Determinar estado del sistema basado en la temperatura
+                    if (temperature >= 40.0) {
+                        if (!alertShown) {
+                            triggerFireAlarm(temperature);
+                        }
+                        updateSystemStatus('active', temperature);
+                        updateRoomStatus('danger');
+                    } else {
+                        if (alertShown) {
+                            resetFireAlarm();
+                        }
+                        updateSystemStatus('normal', temperature);
+                        updateRoomStatus('safe');
+                    }
+                    
+                    lastTemperature = temperature;
+                    
+                } else {
+                    throw new Error('Failed to get temperature data');
+                }
+                
+            } catch (error) {
+                console.error('Error reading sensor data:', error);
+                
+                // Si falla la lectura de variable, intentar obtener desde eventos
+                try {
+                    await checkParticleEvents();
+                } catch (eventError) {
+                    console.error('Error checking events:', eventError);
+                    updateConnectionStatus(false);
+                    addNotification('Error leyendo datos del sensor', 'alert');
+                }
+            }
+        }
+
+        async function checkParticleEvents() {
+            // Buscar eventos recientes del dispositivo
+            const response = await fetch(`https://api.particle.io/v1/devices/${deviceId}/events?access_token=${accessToken}&limit=5`);
+            
+            if (response.ok) {
+                const events = await response.json();
+                
+                // Buscar eventos de temperatura o alertas
+                for (const event of events) {
+                    if (event.name === 'temperatura' || event.name === 'temperature') {
+                        const temperature = parseFloat(event.data);
+                        if (!isNaN(temperature)) {
+                            document.getElementById('temperatureValue').textContent = `${temperature.toFixed(1)}°C`;
+                            
+                            if (temperature >= 40.0 && !alertShown) {
+                                triggerFireAlarm(temperature);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        function triggerFireAlarm(temperature) {
+            alertShown = true;
+            
+            // Mostrar alerta de emergencia
+            document.getElementById('alertMessage').textContent = 
+                `Temperatura crítica detectada: ${temperature.toFixed(1)}°C. Sistema de extinción activado automáticamente.`;
+            document.getElementById('emergencyAlert').style.display = 'flex';
+            
+            // Enviar notificación push
+            sendPushNotification(
+                '🚨 TEMPERATURA CRÍTICA', 
+                `${temperature.toFixed(1)}°C detectados. Sistema activado automáticamente.`
+            );
+            
+            // Agregar a log de notificaciones
+            addNotification(
+                `¡TEMPERATURA CRÍTICA! ${temperature.toFixed(1)}°C - Sistema activado automáticamente`, 
+                'alert'
+            );
+            
+            // Vibrar dispositivo si está disponible
+            if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200, 100, 200]);
+            }
+        }
+
+        function resetFireAlarm() {
+            alertShown = false;
+            document.getElementById('emergencyAlert').style.display = 'none';
+            addNotification('Temperatura normalizada - Sistema desactivado', 'success');
+        }
+
+        function acknowledgeAlert() {
+            document.getElementById('emergencyAlert').style.display = 'none';
+            addNotification('Alerta confirmada por el usuario', 'info');
+        }
+
+        // Actualización de UI
+        function updateConnectionStatus(connected) {
+            isConnected = connected;
+            const statusEl = document.getElementById('connectionStatus');
+            
+            if (connected) {
+                statusEl.textContent = '🟢 Conectado';
+                statusEl.className = 'connection-status connected';
+            } else {
+                statusEl.textContent = '🔴 Desconectado';
+                statusEl.className = 'connection-status disconnected';
+            }
+        }
+
+        function updateRoomStatus(status) {
+            const iconEl = document.getElementById('roomIcon');
+            const titleEl = document.getElementById('roomTitle');
+            const subtitleEl = document.getElementById('roomSubtitle');
+            
+            if (status === 'danger') {
+                iconEl.textContent = '🔥';
+                iconEl.className = 'room-icon danger-mode';
+                titleEl.textContent = '¡PELIGRO - TEMPERATURA CRÍTICA!';
+                subtitleEl.textContent = 'Sistema de extinción activado automáticamente';
+            } else {
+                iconEl.textContent = '🏠';
+                iconEl.className = 'room-icon safe-mode';
+                titleEl.textContent = 'Estado Normal';
+                subtitleEl.textContent = 'Temperatura dentro de parámetros normales';
+            }
+        }
+
+        function updateSystemStatus(status, temperature) {
+            const systemStatusEl = document.getElementById('systemStatus');
+            const pumpIconEl = document.getElementById('pumpIcon');
+            const pumpStatusEl = document.getElementById('pumpStatus');
+            const pumpSubstatusEl = document.getElementById('pumpSubstatus');
+            
+            if (status === 'active') {
+                systemStatusEl.textContent = 'ACTIVO';
+                systemStatusEl.style.color = '#f44336';
+                pumpIconEl.className = 'pump-icon pump-on';
+                pumpStatusEl.textContent = 'Sistema Activo';
+                pumpSubstatusEl.textContent = 'Bomba, LEDs y buzzer activados';
+            } else {
+                systemStatusEl.textContent = 'Normal';
+                systemStatusEl.style.color = '#4CAF50';
+                pumpIconEl.className = 'pump-icon pump-off';
+                pumpStatusEl.textContent = 'Sistema Inactivo';
+                pumpSubstatusEl.textContent = `Temperatura: ${temperature.toFixed(1)}°C (Normal)`;
+            }
+        }
+
+        function addNotification(message, type) {
+            const listEl = document.getElementById('notificationsList');
+            const time = new Date().toLocaleTimeString('es-ES', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            const notificationEl = document.createElement('div');
+            notificationEl.className = `notification-item ${type}-notification`;
+            
+            const iconMap = {
+                'alert': '🚨',
+                'info': 'ℹ️',
+                'success': '✅'
+            };
+            const icon = iconMap[type] || '🔔';
+            
+            notificationEl.innerHTML = `
+                <div class="notification-icon">${icon}</div>
+                <div class="notification-content">
+                    <div class="notification-text">${message}</div>
+                    <div class="notification-time">${time}</div>
+                </div>
+            `;
+            
+            listEl.insertBefore(notificationEl, listEl.firstChild);
+            
+            // Mantener solo las últimas 8 notificaciones
+            while (listEl.children.length > 8) {
+                listEl.removeChild(listEl.lastChild);
+            }
+        }
+
+        function sendPushNotification(title, message) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: message,
+                    icon: '🔥',
+                    tag: 'fire-alert',
+                    requireInteraction: true
+                });
+            }
+        }
+
+        // Limpiar interval al cerrar
+        window.addEventListener('beforeunload', function() {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+            }
+        });
+    </script>
 </body>
 </html>
