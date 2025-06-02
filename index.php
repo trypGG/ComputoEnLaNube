@@ -522,19 +522,22 @@
 
     <script>
         // Variables globales
-        let deviceId = '';
-        let accessToken = '';
+        let deviceId = "0a10aced202194944a055b7c";
+        let accessToken = "81290ef92c95e6da2b79850a4d38ffbacaf216e4";
         let isConnected = false;
         let pollInterval;
+        let eventSource;
         let lastTemperature = 0;
         let alertShown = false;
 
         // Configuración inicial
         window.addEventListener('load', function() {
-            loadSettings();
-            if (deviceId && accessToken) {
-                startMonitoring();
-            }
+            // Cargar configuración inicial con los valores proporcionados
+            document.getElementById('deviceId').value = deviceId;
+            document.getElementById('accessToken').value = accessToken;
+            
+            // Iniciar monitoreo automáticamente con las credenciales proporcionadas
+            startMonitoring();
             
             // Solicitar permisos de notificación
             if ('Notification' in window) {
@@ -565,44 +568,55 @@
             deviceId = newDeviceId;
             accessToken = newAccessToken;
             
-            // Guardar en memoria
-            window.deviceSettings = { deviceId, accessToken };
+            // Guardar en localStorage para persistencia
+            localStorage.setItem('particleDeviceId', deviceId);
+            localStorage.setItem('particleAccessToken', accessToken);
             
             closeSettings();
             addNotification('Configuración guardada, intentando conectar...', 'info');
             
-            // Detener monitoreo anterior si existe
-            if (pollInterval) {
-                clearInterval(pollInterval);
-            }
-            
-            startMonitoring();
+            // Reiniciar la conexión
+            restartConnection();
         }
 
         function loadSettings() {
-            if (window.deviceSettings) {
-                deviceId = window.deviceSettings.deviceId;
-                accessToken = window.deviceSettings.accessToken;
+            // Cargar desde localStorage si existe
+            const savedDeviceId = localStorage.getItem('particleDeviceId');
+            const savedAccessToken = localStorage.getItem('particleAccessToken');
+            
+            if (savedDeviceId && savedAccessToken) {
+                deviceId = savedDeviceId;
+                accessToken = savedAccessToken;
             }
         }
 
         // Monitoreo del dispositivo
         function startMonitoring() {
-            if (!deviceId || !accessToken) {
-                updateConnectionStatus(false);
-                addNotification('Configuración incompleta. Usa el botón ⚙️ para configurar', 'info');
-                return;
-            }
-
             addNotification('Iniciando conexión con el dispositivo...', 'info');
             
             // Verificar conexión inicial
             testConnection();
             
-            // Iniciar polling cada 2 segundos
+            // Configurar EventSource para escuchar eventos en tiempo real
+            setupEventSource();
+            
+            // Iniciar polling cada 2 segundos para datos adicionales
             pollInterval = setInterval(async () => {
                 await checkSensorData();
             }, 2000);
+        }
+
+        function restartConnection() {
+            // Limpiar conexiones anteriores
+            if (pollInterval) {
+                clearInterval(pollInterval);
+            }
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            // Iniciar nueva conexión
+            startMonitoring();
         }
 
         async function testConnection() {
@@ -628,20 +642,31 @@
             }
         }
 
-        async function checkSensorData() {
-            if (!isConnected) return;
-
-            try {
-                // Obtener temperatura desde el Particle Photon
-                // Nota: Tu código del Photon debería publicar la temperatura como variable o evento
-                const response = await fetch(`https://api.particle.io/v1/devices/${deviceId}/temperatura?access_token=${accessToken}`);
+        function setupEventSource() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            // Configurar conexión SSE para eventos en tiempo real
+            eventSource = new EventSource(`https://api.particle.io/v1/devices/${deviceId}/events?access_token=${accessToken}`);
+            
+            eventSource.addEventListener('open', () => {
+                console.log('Conexión SSE establecida');
+                updateConnectionStatus(true);
+            });
+            
+            eventSource.addEventListener('error', () => {
+                console.error('Error en conexión SSE');
+                updateConnectionStatus(false);
+            });
+            
+            // Escuchar eventos de temperatura
+            eventSource.addEventListener('temperature', (e) => {
+                const data = JSON.parse(e.data);
+                const temperature = parseFloat(data.data);
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    const temperature = parseFloat(data.result);
-                    
-                    // Actualizar UI con temperatura real
-                    document.getElementById('temperatureValue').textContent = `${temperature.toFixed(1)}°C`;
+                if (!isNaN(temperature)) {
+                    updateTemperature(temperature);
                     
                     // Determinar estado del sistema basado en la temperatura
                     if (temperature >= 40.0) {
@@ -657,49 +682,40 @@
                         updateSystemStatus('normal', temperature);
                         updateRoomStatus('safe');
                     }
-                    
-                    lastTemperature = temperature;
-                    
-                } else {
-                    throw new Error('Failed to get temperature data');
                 }
+            });
+            
+            // Escuchar eventos de estado del sistema
+            eventSource.addEventListener('system_status', (e) => {
+                const data = JSON.parse(e.data);
+                addNotification(`Estado del sistema: ${data.data}`, 'info');
+            });
+        }
+
+        async function checkSensorData() {
+            if (!isConnected) return;
+
+            try {
+                // Obtener temperatura desde el Particle Photon
+                const response = await fetch(`https://api.particle.io/v1/devices/${deviceId}/temperature?access_token=${accessToken}`);
                 
+                if (response.ok) {
+                    const data = await response.json();
+                    const temperature = parseFloat(data.result);
+                    
+                    if (!isNaN(temperature)) {
+                        updateTemperature(temperature);
+                    }
+                }
             } catch (error) {
                 console.error('Error reading sensor data:', error);
-                
-                // Si falla la lectura de variable, intentar obtener desde eventos
-                try {
-                    await checkParticleEvents();
-                } catch (eventError) {
-                    console.error('Error checking events:', eventError);
-                    updateConnectionStatus(false);
-                    addNotification('Error leyendo datos del sensor', 'alert');
-                }
+                updateConnectionStatus(false);
             }
         }
 
-        async function checkParticleEvents() {
-            // Buscar eventos recientes del dispositivo
-            const response = await fetch(`https://api.particle.io/v1/devices/${deviceId}/events?access_token=${accessToken}&limit=5`);
-            
-            if (response.ok) {
-                const events = await response.json();
-                
-                // Buscar eventos de temperatura o alertas
-                for (const event of events) {
-                    if (event.name === 'temperatura' || event.name === 'temperature') {
-                        const temperature = parseFloat(event.data);
-                        if (!isNaN(temperature)) {
-                            document.getElementById('temperatureValue').textContent = `${temperature.toFixed(1)}°C`;
-                            
-                            if (temperature >= 40.0 && !alertShown) {
-                                triggerFireAlarm(temperature);
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
+        function updateTemperature(temperature) {
+            lastTemperature = temperature;
+            document.getElementById('temperatureValue').textContent = `${temperature.toFixed(1)}°C`;
         }
 
         function triggerFireAlarm(temperature) {
@@ -836,10 +852,13 @@
             }
         }
 
-        // Limpiar interval al cerrar
+        // Limpiar al cerrar
         window.addEventListener('beforeunload', function() {
             if (pollInterval) {
                 clearInterval(pollInterval);
+            }
+            if (eventSource) {
+                eventSource.close();
             }
         });
     </script>
